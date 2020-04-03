@@ -11,13 +11,27 @@ import (
 
 type FileLogger struct {
 	Level       LogLevel
-	filePath    string   //日志文件保存的路徑
-	fileName    string   //日志文件保存的文件名
-	fileObj     *os.File //存储文件
-	errfileObj  *os.File //错误日志集合
-	maxFileSize int64    //最大文件大小
-	lastHour    int      //上一次的切割时间的小时数
+	filePath    string       //日志文件保存的路徑
+	fileName    string       //日志文件保存的文件名
+	fileObj     *os.File     //存储文件
+	errfileObj  *os.File     //错误日志集合
+	maxFileSize int64        //最大文件大小
+	logChan     chan *logMsg //异步通信
 }
+
+type logMsg struct {
+	level     LogLevel
+	msg       string
+	funcName  string
+	fileName  string
+	timestamp string
+	line      int
+}
+
+var (
+	//MaxSize日志通道缓冲区的大小
+	MaxSize = 50000
+)
 
 //NewFileLogger构造函数
 func NewFileLogger(levelStr, filePath, fileName string, maxFileSize int64) *FileLogger {
@@ -30,6 +44,7 @@ func NewFileLogger(levelStr, filePath, fileName string, maxFileSize int64) *File
 		filePath:    filePath,
 		fileName:    fileName,
 		maxFileSize: maxFileSize,
+		logChan:     make(chan *logMsg, MaxSize),
 	}
 	err = fl.initFile() //按照文件路径和文件名打开
 	if err != nil {
@@ -53,6 +68,8 @@ func (f *FileLogger) initFile() error {
 	}
 	f.fileObj = fileObj
 	f.errfileObj = errfileObj
+	//开启一个后台的goroutine去往文件里写日志
+	go f.writeLogBackground()
 	return nil
 }
 
@@ -72,15 +89,10 @@ func (f *FileLogger) checkSize(file *os.File) bool {
 	return fileInfo.Size() >= f.maxFileSize
 }
 
-//按小时数切割
+//按小时数切割(通过确认当前时间分钟是否为00)
 func (f *FileLogger) checkHour(file *os.File) bool {
-	fileInfo, err := file.Stat()
-	if err != nil {
-		fmt.Printf("get file info failed,err:%v\n", err)
-		return false
-	}
 	//在写日志之前检查一下当前时间的小时数和之前保存的是否一致，不一致就要切割
-	 return fileInfo.ModTime().Hour() != f.lastHour
+	return time.Now().Format("05") == "00"
 }
 
 //文件切割
@@ -108,12 +120,9 @@ func (f *FileLogger) spiltFile(file *os.File) (*os.File, error) {
 	return fileObj, nil
 }
 
-//记录日志的方法
-func (f *FileLogger) log(lv LogLevel, format string, arg ...interface{}) {
-	if f.enable(lv) {
-		msg := fmt.Sprintf(format, arg...)
-		now := time.Now()
-		funcName, fileName, lineNo := getInfo(3)
+//开启后台写日志函数
+func (f *FileLogger) writeLogBackground() {
+	for {
 		if f.checkSize(f.fileObj) {
 			newFile, err := f.spiltFile(f.fileObj)
 			if err != nil {
@@ -122,18 +131,50 @@ func (f *FileLogger) log(lv LogLevel, format string, arg ...interface{}) {
 			}
 			f.fileObj = newFile
 		}
-		fmt.Fprintf(f.fileObj, "[%s] [%s] [%s--%s:%d] %s\n", now.Format("2006-01-02 15:04:05"), getLogString(lv), fileName, funcName, lineNo, msg)
-		if lv >= ERROR {
-			//如果要记录的日志大于ERROR级别，则要需要在errfileObj中记录一遍
-			if f.checkSize(f.errfileObj) {
-				newFile, err := f.spiltFile(f.errfileObj)
-				if err != nil {
-					fmt.Printf("spiltFile errfileObj failed,err:%v\n", err)
-					return
+		select {
+		case logTmp := <-f.logChan:
+			//把日志字符串拼接出来
+			logInfo := fmt.Sprintf("[%s] [%s] [%s--%s:%d] %s\n", logTmp.timestamp, getLogString(logTmp.level), logTmp.fileName, logTmp.funcName, logTmp.line, logTmp.msg)
+			fmt.Fprintf(f.fileObj, logInfo)
+			if logTmp.level >= ERROR {
+				//如果要记录的日志大于ERROR级别，则要需要在errfileObj中记录一遍
+				if f.checkSize(f.errfileObj) {
+					newFile, err := f.spiltFile(f.errfileObj)
+					if err != nil {
+						fmt.Printf("spiltFile errfileObj failed,err:%v\n", err)
+						return
+					}
+					f.errfileObj = newFile
 				}
-				f.errfileObj = newFile
+				fmt.Fprintf(f.errfileObj, logInfo)
 			}
-			fmt.Fprintf(f.errfileObj, "[%s] [%s] [%s--%s:%d] %s\n", now.Format("2006-01-02 15:04:05"), getLogString(lv), fileName, funcName, lineNo, msg)
+		default:
+			//如果取不出来日志，就休息500毫秒
+			time.Sleep(time.Millisecond * 500)
+		}
+	}
+}
+
+//使用channel实现异步记录日志的方法
+func (f *FileLogger) log(lv LogLevel, format string, arg ...interface{}) {
+	if f.enable(lv) {
+		msg := fmt.Sprintf(format, arg...)
+		now := time.Now()
+		funcName, fileName, lineNo := getInfo(3)
+		//先把日志发送到通道中
+		//造一个logMsg对象
+		logTmp := &logMsg{
+			level:     lv,
+			msg:       msg,
+			funcName:  funcName,
+			fileName:  fileName,
+			timestamp: now.Format("2006-01-02 15:04:05"),
+			line:      lineNo,
+		}
+		select {
+		case f.logChan <- logTmp: //通道没满时走这个case
+		default:
+			//通道满了，把日志就丢掉，保证不出现阻塞
 		}
 	}
 }
