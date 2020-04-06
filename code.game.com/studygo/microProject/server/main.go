@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/micro/examples/kubernetes/go/micro"
+	"go-micro"
 )
 
 func main(){
