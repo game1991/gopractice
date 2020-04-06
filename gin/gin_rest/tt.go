@@ -1,15 +1,19 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 func sayHello(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "hello",
-	})
+	//c.JSON(200, gin.H{
+	//	"message": "hello",
+	//})
+	name := c.Param("name")
+	action := c.Param("action")
+	c.String(http.StatusOK, fmt.Sprintf(name+" is "+action))
 
 }
 
@@ -17,7 +21,8 @@ func main() {
 
 	//默认模式,中间包括中间件logger,recovery
 	r := gin.Default()
-	r.GET("/hello", sayHello)
+	r.GET("/hello/:name/*action", sayHello)
+
 	r.GET("/book", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"massage": "GET",

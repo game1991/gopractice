@@ -16,5 +16,6 @@ func main() {
 
 		c.String(http.StatusOK, "Hello %s %s", firstname, lastname)
 	})
+
 	router.Run(":8080")
 }
