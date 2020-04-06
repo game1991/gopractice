@@ -5,6 +5,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+//cmd控制台可以使用curl命令测试
+/*
+curl http://127.0.0.1:8080/v1/login?name=zhangsan
+curl http://127.0.0.1:8080/v2/submit -X POST -d{"name":"game"}
+*/
+
 func main() {
 	router := gin.Default()
 	//路由组1,处理get请求
