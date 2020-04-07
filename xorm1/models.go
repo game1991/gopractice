@@ -80,15 +80,15 @@ func makeWithdraw(id int, withdraw float64) (*Account, error) {
 }
 
 func makeTransfer(id1, id2 int, balance float64) error {
-	a1, err := getAccount(id1)
-	if err != nil {
-		log.Fatal("Fail to get Account,err:", err)
-		return err
+	a1, err1 := getAccount(id1)
+	if err1 != nil {
+		log.Fatal("Fail to get Account,err:", err1)
+		return err1
 	}
-	a2, err := getAccount(id2)
-	if err != nil {
-		log.Fatal("Fail to get Account,err:", err)
-		return err
+	a2, err2 := getAccount(id2)
+	if err2 != nil {
+		log.Fatal("Fail to get Account,err:", err2)
+		return err2
 	}
 	if a1.Balance <= balance {
 		return errors.New("No enough withdraw")
