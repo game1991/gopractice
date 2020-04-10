@@ -21,6 +21,8 @@ func main() {
 
 	//默认模式,中间包括中间件logger,recovery
 	r := gin.Default()
+	//Gin 中的 URL 参数解析的两种方式，分别是路径中的参数解析和查询字符串的参数解析,
+	//下面的例子是路径解析,c.Query("key")是字符串解析,他是c.Request.URL.Query().Get("key")的简写
 	r.GET("/hello/:name/*action", sayHello)
 
 	r.GET("/book", func(c *gin.Context) {
