@@ -1,0 +1,10 @@
+server: 
+    port: 10666
+datasource:
+    drivename: mysql
+    host: 10.0.10.27
+    port: 33306
+    username: root
+    password: root_unionid
+    database: testforuser
+    charset: utf8
