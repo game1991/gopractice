@@ -8,3 +8,4 @@ type User struct {
 	Telephone string `gorm:"varchar(11);not null;unique"`
 	Password  string `gorm:"size:255;not null"`
 }
+ 

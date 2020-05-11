@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
-	//"io/ioutil"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
@@ -13,10 +15,10 @@ import (
 const (
 	clientID     = "dc3e12fdda79a72348ae"
 	clientSecret = "0db4b33e1d29bd4e02a5d95cc2f0ad9ff56df742"
-	oauthState   = "random"
+	oauthState   = "state"
 )
 
-var oauthConfig = &oauth2.Config{
+var oauthConfig = oauth2.Config{
 	ClientID:     clientID,
 	ClientSecret: clientSecret,
 	RedirectURL:  "http://localhost:8080/GithubCallback",
@@ -70,23 +72,32 @@ func handleGithubCallback(c *gin.Context) {
 		c.Redirect(http.StatusTemporaryRedirect, "/")
 		return
 	}
-	c.JSON(http.StatusOK,gin.H{
-		"code":200,
-		"token":token,
-		"msg":"获取token成功",
-	})
-	// //通过token获取客户信息
-	// userInfoURL:="https://api.github.com/user"
-	// response,err:=http.Get(userInfoURL)
-	// if err!=nil{
-	// 	log.Fatalf("Get token failed,err:%#v\n",err)
-	// 	return
-	// }
-	// defer response.Body.Close()
-	// contents,err:=ioutil.ReadAll(response.Body)
-	// c.JSON(http.StatusOK,gin.H{
-	// 	"code":200,
-	// 	"msg":string(contents),
-	// })
+	
+	//通过token获取客户信息
+	userInfoURL:="https://api.github.com/user"
+
+	client:=oauthConfig.Client(oauth2.NoContext,token)
+	response,err:=client.Get(userInfoURL)
+	if err!=nil{
+		log.Fatalf("Get token failed,err:%#v\n",err)
+		return
+	}
+	defer response.Body.Close()
+	contents,err:=ioutil.ReadAll(response.Body)
+	log.Printf("respone status===========>%#v\n",response.Status)
+	log.Printf("contents is =============>%#v\n",string(contents))
+
+
+	//refresh token
+	refreshtoken(token)
+
+}
+
+func refreshtoken(token *oauth2.Token){
+	token.Expiry=time.Now()
+	log.Println("fresh token:")
+	log.Printf("TokenSource=========>%#v\n",oauthConfig.TokenSource(context.Background(),token).Token())
+
+
 
 }

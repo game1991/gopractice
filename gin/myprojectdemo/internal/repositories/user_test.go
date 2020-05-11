@@ -2,16 +2,17 @@ package repositories
 
 import (
 	"fmt"
-	"mydemo/internal/pkg/models"
 	"os"
 	"testing"
+
+	"mydemo/internal/pkg/models"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 )
 
 var (
-	store CURD
+	store Curd
 	db    *gorm.DB
 )
 

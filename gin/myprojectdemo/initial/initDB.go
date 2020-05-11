@@ -2,10 +2,10 @@ package initial
 
 import (
 	"fmt"
-	"mydemo/internal/pkg/models"
 
 	"github.com/jinzhu/gorm"
 	"github.com/spf13/viper"
+	"mydemo/internal/pkg/models"
 )
 
 func InitDB() *gorm.DB {

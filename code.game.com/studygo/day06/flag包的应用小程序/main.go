@@ -8,20 +8,20 @@ import (
 )
 
 const (
+	//NumStr ...
 	NumStr  = "0123456789"
 	charStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+	//SpecStr ...
 	SpecStr = "+=-@#~,.[]()!%^*$"
+	//Usage ...
+	Usage = `实现一个密码生成工具，支持以下功能：
+1、用户可以通过-l 指定生成密码的长度
+2、用户可以通过-t 指定生成密码的字符集，例如：
+-t num 生成全是数字的密码
+-t char 生成的全是英文字符的密码
+-t mix 生成包含数字和英文字符的密码
+-t advance 生成包含数字、英文以及特殊字符的密码`
 )
-
-/*
-   实现一个密码生成工具，支持以下功能：
-   1、用户可以通过-l 指定生成密码的长度
-   2、用户可以通过-t 指定生成密码的字符集，例如：
-   -t num 生成全是数字的密码
-   -t char 生成的全是英文字符的密码
-   -t mix 生成包含数字和英文字符的密码
-   -t advance 生成包含数字、英文以及特殊字符的密码
-*/
 
 var (
 	length  int
@@ -64,6 +64,7 @@ func myPassword() string {
 func main() {
 
 	rand.Seed(time.Now().UnixNano())
+	fmt.Println(Usage)
 	parseArgs()
 	password := myPassword()
 	fmt.Println(password)

@@ -9,7 +9,7 @@ import (
 )
 
 //CURD 实现增删改查
-type CURD interface {
+type Curd interface {
 	QueryUser(*models.User) ([]*models.User, error)
 	CreateUser(*models.User) error
 	DeleteUser(*models.User) error
@@ -45,7 +45,7 @@ func (u *user) QueryUser(user *models.User) ([]*models.User, error) {
 }
 
 //InitStore 实例化user存储
-func InitStore(db *gorm.DB) (CURD, error) {
+func InitStore(db *gorm.DB) (Curd, error) {
 	return &user{
 		orm: db,
 	}, nil
