@@ -3,11 +3,13 @@ package initial
 import (
 	"fmt"
 
+	"ganlei.github.com/gopractice/gin/myprojectdemo/internal/pkg/models"
+
 	"github.com/jinzhu/gorm"
 	"github.com/spf13/viper"
-	"mydemo/internal/pkg/models"
 )
 
+//数据库初始化
 func InitDB() *gorm.DB {
 	drivename := viper.GetString("datasource.drivename")
 	host := viper.GetString("datasource.host")
@@ -22,7 +24,11 @@ func InitDB() *gorm.DB {
 	if err != nil {
 		panic("failed to connect database,err:" + err.Error())
 	}
-	db.AutoMigrate(&models.User{})
+	db.AutoMigrate(&models.User{}, models.Shop{})
+	db.Model(&models.User{}).Related(&models.Shop{}, "Shops")
+	db.Preload("Shops").First(&models.User{})
+
+	db.LogMode(true)
 
 	return db
 }

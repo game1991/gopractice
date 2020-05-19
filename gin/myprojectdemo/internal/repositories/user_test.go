@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"mydemo/internal/pkg/models"
+	"ganlei.github.com/gopractice/gin/myprojectdemo/internal/pkg/models"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"

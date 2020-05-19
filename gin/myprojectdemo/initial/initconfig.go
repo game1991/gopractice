@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+//配置文件初始化
 func InitConfig() {
 	workDir, _ := os.Getwd()
 	viper.SetConfigName("config")

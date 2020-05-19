@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+//生成随机字符串的功能函数
 func RandomString(n int) string {
 
 	//给随机数时一定要注意设置seed

@@ -3,71 +3,84 @@ package user
 import (
 	"strings"
 
-	"mydemo/internal/pkg/models"
-	repo "mydemo/internal/repositories"
-	"mydemo/response"
+	"ganlei.github.com/gopractice/gin/myprojectdemo/internal/pkg/models"
+	repo "ganlei.github.com/gopractice/gin/myprojectdemo/internal/repositories"
+	"ganlei.github.com/gopractice/gin/myprojectdemo/response"
+
+	"log"
 
 	"github.com/gin-gonic/gin"
-	"pkg.deepin.com/service/lib/log"
 )
 
 var store repo.Curd
 
+//接口初始化
 func InitCurd(curd repo.Curd) {
 	store = curd
 }
 
-func QueryUser(c *gin.Context) {
-	name := c.Param("name")
-	if strings.TrimSpace(name) == "" {
-		response.Fail(c, gin.H{"data": "data is nil"}, "query failed")
-		return
-	}
-	user := &models.User{Name: name}
-	data, err := store.QueryUser(user)
+//QueryUser 查询所有用户
+func QueryAllUser(c *gin.Context) {
+	var user models.User
+	data, err := store.UserList(&user)
 	if err != nil {
-		log.Debug("log.DEBUG" + err.Error())
+		log.Fatal("log.Fatal" + err.Error())
 		return
 	}
-	response.Success(c, gin.H{"data": data}, "query suceed")
+	if len(data) < 0 {
+		response.Fail(c, data, "query result is nil")
+		return
+	}
+	response.Success(c, data, "query success")
+
 }
 
+//CreateUser 创建用户
 func CreateUser(c *gin.Context) {
 	name := c.PostForm("name")
 	telephone := c.PostForm("telephone")
 	email := c.PostForm("email")
 	password := c.PostForm("password")
-
+	shopParam := c.PostForm("shop")
+	shopList := strings.Split(shopParam, ",")
+	shops := make([]models.Shop, 0)
+	for _, v := range shopList {
+		tmp := models.Shop{Name: v}
+		shops = append(shops, tmp)
+	}
 	user := &models.User{
 		Name:      name,
 		Telephone: telephone,
 		Email:     email,
 		Password:  password,
+		Shops:     shops,
 	}
 	err := store.CreateUser(user)
 	if err != nil {
-		log.Debug("log.DEBUG" + err.Error())
+		log.Fatal("log.Fatal" + err.Error())
 		return
 	}
-	response.Success(c, gin.H{"data": "create user"}, "create suceed")
+	response.Success(c, user, "create suceed")
 }
 
+//DeleteUser 删除用户
 func DeleteUser(c *gin.Context) {
 	name := c.Param("name")
 	if strings.TrimSpace(name) == "" {
-		response.Fail(c, gin.H{"data": "data is nil"}, "delete failed")
+		response.Fail(c, "param error", "delete failed")
 		return
 	}
 	user := &models.User{Name: name}
 	err := store.DeleteUser(user)
 	if err != nil {
-		log.Debug("log.DEBUG" + err.Error())
+		log.Fatal("log.Fatal" + err.Error())
 		return
 	}
-	response.Success(c, gin.H{"data": name}, "delete suceed")
+	response.Success(c, user, "delete suceed")
 
 }
 
+//UpdateUser 更新用户
 func UpdateUser(c *gin.Context) {
 	name := c.Param("name")
 	if strings.TrimSpace(name) == "" {
@@ -76,10 +89,31 @@ func UpdateUser(c *gin.Context) {
 	}
 	user := &models.User{Name: name}
 	updateUser := &models.User{}
-	n, err := store.UpdateUser(user, updateUser)
+	_, err := store.UpdateUser(user, updateUser)
 	if err != nil {
-		log.Debug("log.DEBUG" + err.Error())
+		log.Fatal("log.Fatal" + err.Error())
 		return
 	}
-	response.Success(c, gin.H{"len(data)": n}, "Update suceed")
+	response.Success(c, updateUser, "Update suceed")
+}
+
+//查询用户购买商品信息通过姓名
+func QueryUserByName(c *gin.Context) {
+	name := c.Param("name")
+	if strings.TrimSpace(name) == "" {
+		response.Fail(c, "param error", "query failed")
+		return
+	}
+	user := models.User{Name: name}
+	data, err := store.QueryUserByName(&user)
+	if err != nil {
+		log.Fatal("log.Fatal" + err.Error())
+		return
+	}
+	if data == nil {
+		response.Fail(c, data, "query result is nil")
+		return
+	}
+	response.Success(c, data, "query success")
+
 }
