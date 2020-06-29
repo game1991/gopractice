@@ -1,0 +1,2 @@
+#去字符格式，以免在windows系统和linux系统不同
+go.mod text eol=lf
