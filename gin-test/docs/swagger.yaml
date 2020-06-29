@@ -1,0 +1,39 @@
+definitions:
+  main.APIError:
+    properties:
+      code:
+        type: integer
+      msg:
+        type: string
+    type: object
+host: localhost:9090
+info:
+  contact:
+    email: ganlei@uniontech.com
+    name: ganlei
+    url: https://juejin.im/user/5e9f9b15f265da47b55504de
+  description: Gin swagger 示例项目
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Gin swagger
+  version: "1.0"
+paths:
+  /template/:
+    get:
+      description: a template
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+        "400":
+          description: err
+          schema:
+            $ref: '#/definitions/main.APIError'
+      summary: 展示模板
+      tags:
+      - template
+swagger: "2.0"

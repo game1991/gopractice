@@ -1,0 +1,16 @@
+sender:
+    sms:
+      debug: true
+      codeLength: 4
+      codeExpire: "3m"
+      limit: 1/2s
+      cooldown: "1m"
+      server:
+        cloud: "sendcloud"
+        user: "mytest"
+        key: "MNBKcHo189XlWq2ebvaJB3jGTCeYVZoC"
+        templates:
+          - language: "zh_CN"
+            template: "25020"
+          - language: "en_US"
+            template: "25021"
